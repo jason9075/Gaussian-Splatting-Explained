@@ -1,5 +1,5 @@
 {
-  description: "3D Gaussian Splatting Tutorial Environment";
+  description = "3D Gaussian Splatting Tutorial Environment";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -14,10 +14,9 @@
       {
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
-            pkgs.just
-            pkgs.entr
-            pkgs.nodejs_20
-            pkgs.nodePackages.npm
+            just
+            entr
+            nodejs_20
           ];
 
           shellHook = ''
