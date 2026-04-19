@@ -70,72 +70,78 @@ export function initProjectionDemo(containerId) {
     imagingPlane.add(splat);
 
     // 4. Projection Rays (Lines connecting 3D to 2D)
+    // Pre-create 4 Line objects and reuse them each frame to avoid memory leaks.
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xebcb8b, transparent: true, opacity: 0.5 }); // Nord13
-    const rays = new THREE.Group();
-    scene.add(rays);
+    const rayLines = Array.from({ length: 4 }, () => {
+        const positions = new Float32Array(6); // 2 points × 3 components
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const line = new THREE.Line(geom, lineMaterial);
+        scene.add(line);
+        return line;
+    });
+
+    const _ellipsoidWorld = new THREE.Vector3();
+    const _splatWorld = new THREE.Vector3();
 
     function updateProjection() {
-        // Clear old rays
-        while(rays.children.length > 0) { 
-            rays.remove(rays.children[0]); 
-        }
-
         // Animate the 3D ellipsoid's rotation
         ellipsoid.rotation.x += 0.01;
         ellipsoid.rotation.y += 0.015;
 
-        // Naive mock of projection math: 
+        // Naive mock of projection math:
         // We use the rotation to deform the 2D splat shape on the plane dynamically
         const rotY = Math.abs(Math.sin(ellipsoid.rotation.y));
         const rotX = Math.abs(Math.cos(ellipsoid.rotation.x));
-        
+
         splat.scale.set(
-            1.5 + rotY * 0.5, 
-            0.8 + rotX * 0.5, 
+            1.5 + rotY * 0.5,
+            0.8 + rotX * 0.5,
             1
         );
-        
+
         // Slightly offset the splat center reflecting the projection (mock)
         splat.position.x = ellipsoid.position.x * 0.5;
         splat.position.y = (ellipsoid.position.y - 2) * 0.5;
 
-        // Draw 4 corner rays from ellipsoid bounding box to splat
-        const points = [
-            new THREE.Vector3().setFromMatrixPosition(ellipsoid.matrixWorld).add(new THREE.Vector3(1, 1, 0)),
-            new THREE.Vector3().setFromMatrixPosition(ellipsoid.matrixWorld).add(new THREE.Vector3(-1, 1, 0)),
-            new THREE.Vector3().setFromMatrixPosition(ellipsoid.matrixWorld).add(new THREE.Vector3(-1, -1, 0)),
-            new THREE.Vector3().setFromMatrixPosition(ellipsoid.matrixWorld).add(new THREE.Vector3(1, -1, 0))
+        ellipsoid.updateMatrixWorld();
+        splat.updateMatrixWorld();
+        _ellipsoidWorld.setFromMatrixPosition(ellipsoid.matrixWorld);
+        _splatWorld.setFromMatrixPosition(splat.matrixWorld);
+
+        const offsets = [
+            [  1,  1 ], [ -1,  1 ], [ -1, -1 ], [  1, -1 ]
         ];
 
-        const splatPoints = [
-            new THREE.Vector3().setFromMatrixPosition(splat.matrixWorld).add(new THREE.Vector3(splat.scale.x, splat.scale.y, 0)),
-            new THREE.Vector3().setFromMatrixPosition(splat.matrixWorld).add(new THREE.Vector3(-splat.scale.x, splat.scale.y, 0)),
-            new THREE.Vector3().setFromMatrixPosition(splat.matrixWorld).add(new THREE.Vector3(-splat.scale.x, -splat.scale.y, 0)),
-            new THREE.Vector3().setFromMatrixPosition(splat.matrixWorld).add(new THREE.Vector3(splat.scale.x, -splat.scale.y, 0))
-        ];
-
-        for (let i = 0; i < 4; i++) {
-            const geom = new THREE.BufferGeometry().setFromPoints([points[i], splatPoints[i]]);
-            const line = new THREE.Line(geom, lineMaterial);
-            rays.add(line);
-        }
+        offsets.forEach(([ox, oy], i) => {
+            const attr = rayLines[i].geometry.attributes.position;
+            // Start: ellipsoid corner
+            attr.setXYZ(0, _ellipsoidWorld.x + ox,     _ellipsoidWorld.y + oy,     _ellipsoidWorld.z);
+            // End: splat corner
+            attr.setXYZ(1, _splatWorld.x + splat.scale.x * ox, _splatWorld.y + splat.scale.y * oy, _splatWorld.z);
+            attr.needsUpdate = true;
+        });
     }
 
+    let animId = null;
+
     function animate() {
-        requestAnimationFrame(animate);
-        
+        animId = requestAnimationFrame(animate);
         controls.update();
         updateProjection();
-
         renderer.render(scene, camera);
     }
 
-    animate();
-
     // Handle Resize
-    window.addEventListener('resize', () => {
+    const resizeObserver = new ResizeObserver(() => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    resizeObserver.observe(container);
+
+    return {
+        start() { if (animId === null) animate(); },
+        stop() { if (animId !== null) { cancelAnimationFrame(animId); animId = null; } }
+    };
 }

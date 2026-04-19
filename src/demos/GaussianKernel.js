@@ -63,23 +63,24 @@ export function initGaussianKernelDemo(containerId) {
     updateTransform();
 
     // Animation Loop
+    let animId = null;
+
     function animate() {
-        requestAnimationFrame(animate);
-        
-        controls.update(); // required if controls.enableDamping or controls.autoRotate are set
-        
-        // Subtle idle rotation (Optional, but kept to give it life if not dragging)
-        // ellipsoid.rotation.y += 0.005; 
-        
+        animId = requestAnimationFrame(animate);
+        controls.update();
         renderer.render(scene, camera);
     }
 
-    animate();
-
     // Handle Resize
-    window.addEventListener('resize', () => {
+    const resizeObserver = new ResizeObserver(() => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    resizeObserver.observe(container);
+
+    return {
+        start() { if (animId === null) animate(); },
+        stop() { if (animId !== null) { cancelAnimationFrame(animId); animId = null; } }
+    };
 }

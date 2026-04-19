@@ -94,8 +94,10 @@ export function initSortingDemo(containerId) {
     stepSlider?.addEventListener('input', updateVisibility);
     updateVisibility();
 
+    let animId = null;
+
     function animate() {
-        requestAnimationFrame(animate);
+        animId = requestAnimationFrame(animate);
         controls.update();
 
         // Billboarding: make all splats face the camera continuously
@@ -106,11 +108,15 @@ export function initSortingDemo(containerId) {
         renderer.render(scene, camera);
     }
 
-    animate();
-
-    window.addEventListener('resize', () => {
+    const resizeObserver = new ResizeObserver(() => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    resizeObserver.observe(container);
+
+    return {
+        start() { if (animId === null) animate(); },
+        stop() { if (animId !== null) { cancelAnimationFrame(animId); animId = null; } }
+    };
 }

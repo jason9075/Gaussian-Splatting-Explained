@@ -75,33 +75,32 @@ export function initMeshExtractionDemo(containerId) {
     const raycaster = new THREE.Raycaster();
     const center = new THREE.Vector3();
 
-    function animate(time) {
-        requestAnimationFrame(animate);
-        time *= 0.001;
+    let animId = null;
+    let startTime = null;
+
+    function animate(timestamp) {
+        animId = requestAnimationFrame(animate);
+        if (startTime === null) startTime = timestamp;
+        const time = (timestamp - startTime) * 0.001;
 
         // Animate Slice
         sliceGroup.position.z = Math.sin(time * 0.5) * 2;
-        
+
         // Update Voxel colors based on distance to targetMesh
+        const _worldPos = new THREE.Vector3();
         voxels.forEach(v => {
-            const worldPos = new THREE.Vector3();
-            v.getWorldPosition(worldPos);
-            
+            v.getWorldPosition(_worldPos);
+
             // Check if inside or outside (Simulated SDF logic for demo)
-            // For a torus knot, we use a simple distance to center + noise approximation 
-            // but for real look, we measure distance to original geometry
-            const dist = worldPos.length();
-            const threshold = 1.4 + Math.sin(worldPos.x * 2) * 0.2; 
-            
+            const dist = _worldPos.length();
+            const threshold = 1.4 + Math.sin(_worldPos.x * 2) * 0.2;
+
             if (dist < threshold) {
-                // Inside: Red (Negative SDF)
-                v.material.color.setHex(0xbf616a);
+                v.material.color.setHex(0xbf616a);       // Inside: Red (Negative SDF)
             } else if (dist < threshold + 0.15) {
-                // Surface: Gold (0-Level)
-                v.material.color.setHex(0xebcb8b);
+                v.material.color.setHex(0xebcb8b);       // Surface: Gold (0-Level)
             } else {
-                // Outside: Blue (Positive SDF)
-                v.material.color.setHex(0x88c0d0);
+                v.material.color.setHex(0x88c0d0);       // Outside: Blue (Positive SDF)
             }
         });
 
@@ -116,11 +115,15 @@ export function initMeshExtractionDemo(containerId) {
         renderer.render(scene, camera);
     }
 
-    animate(0);
-
-    window.addEventListener('resize', () => {
+    const resizeObserver = new ResizeObserver(() => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    resizeObserver.observe(container);
+
+    return {
+        start() { if (animId === null) animate(performance.now()); },
+        stop() { if (animId !== null) { cancelAnimationFrame(animId); animId = null; } }
+    };
 }

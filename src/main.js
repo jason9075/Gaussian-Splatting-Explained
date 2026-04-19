@@ -28,29 +28,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initialize Demos
-    initColmapDemo('colmap-demo');
-    initGaussianKernelDemo('kernel-demo');
-    initProjectionDemo('projection-demo');
-    initSortingDemo('sorting-demo');
-    initSHDemo('sh-demo');
-    initMeshExtractionDemo('mesh-demo');
-
-    // Sidebar Toggle Logic
+    // --- Sidebar Toggle ---
     const toggleBtn = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('sidebar');
     const layoutWrapper = document.getElementById('layout-wrapper');
 
+    // Restore sidebar state from previous session
+    if (localStorage.getItem('sidebarOpen') === 'true') {
+        sidebar.classList.add('visible');
+        layoutWrapper.classList.add('sidebar-open');
+        toggleBtn.innerHTML = '✕';
+    }
+
     toggleBtn?.addEventListener('click', () => {
         sidebar.classList.toggle('visible');
         layoutWrapper.classList.toggle('sidebar-open');
-        
-        // Change button text contextually
-        if (sidebar.classList.contains('visible')) {
-            toggleBtn.innerHTML = '✕';
-        } else {
-            toggleBtn.innerHTML = '☰';
-        }
+        const isOpen = sidebar.classList.contains('visible');
+        localStorage.setItem('sidebarOpen', isOpen);
+        toggleBtn.innerHTML = isOpen ? '✕' : '☰';
     });
 
     // Close sidebar when a navigation link is clicked (mobile friendly)
@@ -60,8 +55,54 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.innerWidth <= 768) {
                 sidebar.classList.remove('visible');
                 layoutWrapper.classList.remove('sidebar-open');
+                localStorage.setItem('sidebarOpen', false);
                 toggleBtn.innerHTML = '☰';
             }
         });
+    });
+
+    // --- Scroll Spy: highlight current section in sidebar ---
+    const sections = document.querySelectorAll('section[id]');
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                const activeLink = document.querySelector(`.sidebar nav a[href="#${entry.target.id}"]`);
+                activeLink?.classList.add('active');
+            }
+        });
+    }, { threshold: 0.3 });
+
+    sections.forEach(s => sectionObserver.observe(s));
+
+    // --- Lazy Demo Initialization via IntersectionObserver ---
+    const demoInits = {
+        'colmap-demo':     initColmapDemo,
+        'kernel-demo':     initGaussianKernelDemo,
+        'projection-demo': initProjectionDemo,
+        'sorting-demo':    initSortingDemo,
+        'sh-demo':         initSHDemo,
+        'mesh-demo':       initMeshExtractionDemo,
+    };
+
+    const demoHandles = {};
+
+    const demoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const id = entry.target.id;
+            if (entry.isIntersecting) {
+                if (!demoHandles[id]) {
+                    demoHandles[id] = demoInits[id](id);
+                }
+                demoHandles[id]?.start();
+            } else {
+                demoHandles[id]?.stop();
+            }
+        });
+    }, { threshold: 0.1 });
+
+    Object.keys(demoInits).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) demoObserver.observe(el);
     });
 });

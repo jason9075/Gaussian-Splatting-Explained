@@ -108,10 +108,12 @@ export function initColmapDemo(containerId) {
     grid.position.y = -3;
     scene.add(grid);
 
+    let animId = null;
+
     function animate() {
-        requestAnimationFrame(animate);
+        animId = requestAnimationFrame(animate);
         controls.update();
-        
+
         // Slowly rotate the target object to make it dynamic
         targetGroup.rotation.y += 0.005;
         targetGroup.rotation.x += 0.002;
@@ -119,11 +121,15 @@ export function initColmapDemo(containerId) {
         renderer.render(scene, camera);
     }
 
-    animate();
-
-    window.addEventListener('resize', () => {
+    const resizeObserver = new ResizeObserver(() => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    resizeObserver.observe(container);
+
+    return {
+        start() { if (animId === null) animate(); },
+        stop() { if (animId !== null) { cancelAnimationFrame(animId); animId = null; } }
+    };
 }
