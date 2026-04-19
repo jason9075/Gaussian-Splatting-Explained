@@ -1,0 +1,16 @@
+{
+  "name": "gs_tutorial",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "katex": "^0.16.45",
+    "three": "^0.184.0"
+  }
+}

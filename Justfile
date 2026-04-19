@@ -4,16 +4,10 @@
 default:
     @just --list
 
-# Development mode with file watching
+# Development mode
 dev:
-    @echo "Watching for file changes..."
-    find . -maxdepth 2 -not -path '*/.*' -not -path './node_modules*' | entr -r echo "Something changed! Run 'just build' or custom update logic here."
+    npm run dev
 
-# Placeholder for setup
+# Setup project
 setup:
     npm install
-
-# Placeholder for build
-build:
-    @echo "Building the project..."
-    # npm run build

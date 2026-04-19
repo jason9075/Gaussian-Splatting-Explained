@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gaussian Splatting: Technical Tutorial</title>
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasIQSXX1" crossorigin="anonymous">
+    <!-- Import Maps for ES Modules natively in browser -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "katex": "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.mjs"
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>3D Gaussian Splatting</h1>
+            <p>From Discrete Points to Continuous Volumes</p>
+        </header>
+
+        <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p>Why move away from Point Clouds or NeRFs?</p>
+            <ul>
+                <li><strong>The Problem</strong>: Point clouds are discrete and sparse; NeRFs are continuous but computationally expensive to query.</li>
+                <li><strong>The Solution</strong>: Represent the scene as a collection of millions of semi-transparent 3D Gaussian kernels.</li>
+                <li><strong>The Intuition</strong>: Imagine "painting" a scene with fuzzy, translucent stickers that have specific shapes, colors, and orientations.</li>
+            </ul>
+        </section>
+
+        <section id="mathematics">
+            <h2>2. Mathematical Foundation</h2>
+            <p>Define the primitive that makes everything work: the 3D Gaussian Kernel.</p>
+            
+            <h3>The Probability Density Function (PDF)</h3>
+            <div class="math-block" id="math-pdf"></div>
+            
+            <h3>Decomposing the Covariance ($\Sigma$)</h3>
+            <p>Storing a full covariance matrix is difficult to optimize. Instead, we use <strong>Scaling ($S$)</strong> and <strong>Rotation ($R$, via Quaternions)</strong>:</p>
+            <div class="math-block" id="math-covariance"></div>
+            
+            <div id="kernel-demo" class="demo-viewport">
+                <!-- Three.js Canvas will be here -->
+                <div class="controls">
+                    <div class="control-item">
+                        <label>Scale X</label>
+                        <input type="range" id="scale-x" min="0.1" max="3" step="0.1" value="1.5">
+                    </div>
+                    <div class="control-item">
+                        <label>Scale Y</label>
+                        <input type="range" id="scale-y" min="0.1" max="3" step="0.1" value="0.8">
+                    </div>
+                    <div class="control-item">
+                        <label>Rotation</label>
+                        <input type="range" id="rotation-z" min="0" max="6.28" step="0.1" value="0.5">
+                    </div>
+                </div>
+            </div>
+            <blockquote>Note: This ensures the matrix remains Positive Semi-Definite (PSD) during optimization.</blockquote>
+        </section>
+
+        <section id="algorithm">
+            <h2>3. The Core Algorithm</h2>
+            
+            <h3>A. Projection (3D to 2D Splatting)</h3>
+            <p>How a 3D ellipsoid becomes a 2D "splat" on the screen.</p>
+            <div class="math-block" id="math-projection"></div>
+            
+            <div id="projection-demo" class="demo-viewport">
+                <!-- Projection visualization here -->
+            </div>
+
+            <h3>B. Fast Tile-Based Rasterization</h3>
+            <p>This is where the real-time magic happens:</p>
+            <ul>
+                <li><strong>Instancing and Culling</strong>: Divide the screen into $16 \times 16$ tiles.</li>
+                <li><strong>Depth Sorting</strong>: Sort Gaussians by their depth ($Z$-buffer) within each tile.</li>
+                <li><strong>Alpha Blending</strong>:
+                    <div class="math-block" id="math-alpha"></div>
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
