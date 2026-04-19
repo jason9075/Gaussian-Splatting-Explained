@@ -66,9 +66,14 @@ body {
   background: var(--nord1);
   border-right: 1px solid var(--nord2);
   transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   z-index: 100;
-  padding: 2rem 1rem;
+  box-shadow: 8px 0 24px rgba(0,0,0,0.2); /* add depth to sidebar for flat layout */
+}
+
+.sidebar-content {
+  height: 100%;
+  padding: 2rem 1.5rem;
   overflow-y: auto;
 }
 
@@ -81,45 +86,47 @@ body {
 }
 
 .sidebar nav ul li {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .sidebar nav ul li a {
   text-decoration: none;
   color: var(--text-secondary);
   font-weight: 500;
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
   display: block;
-  padding: 0.5rem;
-  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
 }
 
 .sidebar nav ul li a:hover {
   color: var(--nord8);
-  background: var(--nord2);
+  background: rgba(216, 222, 233, 0.05); /* very subtle hover */
 }
 
-.toggle-btn {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 1000;
-  background: var(--nord3);
-  color: var(--nord6);
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
+.sidebar-toggle-tab {
+  position: absolute;
+  top: 30px;
+  right: -46px; /* Stick out from the sidebar */
+  width: 46px;
+  height: 46px;
+  background: var(--nord1);
+  color: var(--nord4);
+  border: 1px solid var(--nord2);
+  border-left: none; /* Blend perfectly with sidebar right border */
+  border-radius: 0 12px 12px 0;
   cursor: pointer;
-  font-size: 1.2rem;
-  transition: background 0.2s;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.1);
 }
 
-.toggle-btn:hover {
-  background: var(--nord10);
-}
-
-.toggle-btn.moved {
-  left: 300px;
+.sidebar-toggle-tab:hover {
+  background: var(--nord2);
+  color: var(--nord6);
 }
 
 .container {

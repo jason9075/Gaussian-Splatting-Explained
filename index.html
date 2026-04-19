@@ -19,17 +19,19 @@
     <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
-    <button id="sidebar-toggle" class="toggle-btn toggle-btn-open">☰ Menu</button>
-    
     <aside id="sidebar" class="sidebar">
-        <h3 style="margin-top: 0;">Table of Contents</h3>
-        <nav>
-            <ul>
-                <li><a href="#introduction">1. Introduction</a></li>
-                <li><a href="#mathematics">2. Mathematical Foundation</a></li>
-                <li><a href="#algorithm">3. The Core Algorithm</a></li>
-            </ul>
-        </nav>
+        <div class="sidebar-content">
+            <h3 style="margin-top: 0;">Table of Contents</h3>
+            <nav>
+                <ul>
+                    <li><a href="#introduction">1. Introduction</a></li>
+                    <li><a href="#mathematics">2. Mathematical Foundation</a></li>
+                    <li><a href="#algorithm">3. The Core Algorithm</a></li>
+                </ul>
+            </nav>
+        </div>
+        <!-- Toggle button firmly attached to the sidebar -->
+        <button id="sidebar-toggle" class="sidebar-toggle-tab">☰</button>
     </aside>
 
     <div class="layout-wrapper" id="layout-wrapper">

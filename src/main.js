@@ -35,15 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleBtn?.addEventListener('click', () => {
         sidebar.classList.toggle('visible');
         layoutWrapper.classList.toggle('sidebar-open');
-        toggleBtn.classList.toggle('moved');
         
         // Change button text contextually
         if (sidebar.classList.contains('visible')) {
-            toggleBtn.innerHTML = '✕ Close';
-            toggleBtn.style.color = 'var(--nord11)';
+            toggleBtn.innerHTML = '✕';
         } else {
-            toggleBtn.innerHTML = '☰ Menu';
-            toggleBtn.style.color = 'var(--nord6)';
+            toggleBtn.innerHTML = '☰';
         }
     });
 
@@ -54,9 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.innerWidth <= 768) {
                 sidebar.classList.remove('visible');
                 layoutWrapper.classList.remove('sidebar-open');
-                toggleBtn.classList.remove('moved');
-                toggleBtn.innerHTML = '☰ Menu';
-                toggleBtn.style.color = 'var(--nord6)';
+                toggleBtn.innerHTML = '☰';
             }
         });
     });
