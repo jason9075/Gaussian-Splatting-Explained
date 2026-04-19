@@ -237,6 +237,59 @@ input[type="range"] {
   box-sizing: content-box;
 }
 
+/* Densification Diagram */
+.diagram-container {
+  display: flex;
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+.diagram-card {
+  flex: 1;
+  background: var(--bg-color);
+  border: 1px solid var(--nord2);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.diagram-card h4 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: var(--nord4);
+}
+
+.diagram-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  min-height: 120px;
+}
+
+.arrow {
+  color: var(--nord9);
+  font-size: 2rem;
+}
+
+.blob-shape {
+  background: rgba(136, 192, 208, 0.4);
+  border: 2px solid var(--nord8);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 15px rgba(136, 192, 208, 0.2);
+}
+
+.blob-small { width: 30px; height: 30px; }
+.blob-large { width: 90px; height: 90px; border-color: var(--nord11); background: rgba(191, 97, 106, 0.4); box-shadow: 0 0 15px rgba(191, 97, 106, 0.2);}
+.blob-medium { width: 50px; height: 50px; border-color: var(--nord11); background: rgba(191, 97, 106, 0.4); box-shadow: 0 0 15px rgba(191, 97, 106, 0.2);}
+
+.diagram-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   header h1 { font-size: 2.5rem; }

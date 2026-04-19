@@ -33,6 +33,7 @@
                     </ul>
                 </li>
                 <li><a href="#algorithm">4. The Core Algorithm</a></li>
+                <li><a href="#optimization">5. The Optimization Loop</a></li>
                 </ul>
             </nav>
         </div>
@@ -150,6 +151,54 @@
                     <p style="margin-top: 8px; margin-bottom: 0px; font-size: 0.8rem;" id="step-label">All splats rendered</p>
                 </div>
             </div>
+        </section>
+
+        <section id="optimization">
+            <h2>5. The Optimization Loop (The "Learning" Phase)</h2>
+            <p>We've discussed initialization and rendering, but what makes the Gaussians actually fit the photos? That's the training loop using <strong>Stochastic Gradient Descent (SGD)</strong>.</p>
+            
+            <h3>A. The Loss Function</h3>
+            <p>Every iteration, we compare the rendered photo (I_render) with the actual ground truth photo from the dataset (I_gt). The difference determines our error.</p>
+            <div class="math-block" id="math-loss"></div>
+            <p>We combine <strong>L1 Loss</strong> (for absolute pixel differences) with <strong>D-SSIM</strong> (Structural Similarity Index, to preserve sharp edges and local structures).</p>
+
+            <h3>B. Adaptive Density Control (Densification)</h3>
+            <p>This is the core contribution of the 3DGS paper. While optimizing the shape and color of Gaussians, the algorithm also decides to add or remove them based on necessity:</p>
+            
+            <div class="diagram-container">
+                <div class="diagram-card">
+                    <h4>Clone (Under-reconstruction)</h4>
+                    <div class="diagram-visual">
+                        <div class="blob-shape blob-small"></div>
+                        <div class="arrow">→</div>
+                        <div style="display: flex; gap: 4px;">
+                            <div class="blob-shape blob-small"></div>
+                            <div class="blob-shape blob-small"></div>
+                        </div>
+                    </div>
+                    <div class="diagram-desc">
+                        When a Gaussian is <strong>too small</strong> but covers an area of high error.<br>We <strong>clone</strong> it and move it slightly precisely in the direction of the error gradient to fill the gap.
+                    </div>
+                </div>
+
+                <div class="diagram-card">
+                    <h4>Split (Over-reconstruction)</h4>
+                    <div class="diagram-visual">
+                        <div class="blob-shape blob-large"></div>
+                        <div class="arrow">→</div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="blob-shape blob-medium"></div>
+                            <div class="blob-shape blob-medium"></div>
+                        </div>
+                    </div>
+                    <div class="diagram-desc">
+                        When a Gaussian is <strong>too large</strong> and blurring high-frequency details.<br>We <strong>split</strong> it into two smaller Gaussians (scaling them down by 1.6x) to capture sharper features.
+                    </div>
+                </div>
+            </div>
+            
+            <h3>C. Pruning</h3>
+            <p>Periodically, the algorithm cleans up the scene by removing Gaussians that are basically transparent (Opacity α drops near zero) or those that have become unreasonably large and are "leaking" into empty space. This keeps the rendering fast and the file size manageable.</p>
         </section>
     </div>
     </div> <!-- End layout wrapper -->

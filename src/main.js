@@ -11,7 +11,8 @@ const mathElements = {
     'math-covariance': '\\Sigma = RSS^TR^T',
     'math-sh': 'c(\\theta, \\phi) = \\sum_{l=0}^{k} \\sum_{m=-l}^{l} y_{lm} Y_{lm}(\\theta, \\phi)',
     'math-projection': '\\Sigma\' = J W \\Sigma W^T J^T',
-    'math-alpha': 'C = \\sum_{i \\in N} c_i \\alpha_i T_i \\quad , \\quad T_i = \\prod_{j=1}^{i-1} (1 - \\alpha_j)'
+    'math-alpha': 'C = \\sum_{i \\in N} c_i \\alpha_i T_i \\quad , \\quad T_i = \\prod_{j=1}^{i-1} (1 - \\alpha_j)',
+    'math-loss': '\\mathcal{L} = (1 - \\lambda)\\mathcal{L}_1(I_{render}, I_{gt}) + \\lambda \\mathcal{L}_{D-SSIM}(I_{render}, I_{gt})'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
