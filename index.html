@@ -88,7 +88,7 @@
 
         <section id="mathematics">
             <h2>3. The Anatomy of a Gaussian (Geometry & Appearance)</h2>
-            <p>Define the primitive that makes everything work: the 3D Gaussian Kernel.</p>
+            <p>Let's define the primitive that makes everything work: the 3D Gaussian Kernel.</p>
             
             <h3>The Probability Density Function (PDF)</h3>
             <div class="math-block" id="math-pdf"></div>
@@ -111,7 +111,7 @@
                     </li>
                     <li>
                         <strong>Rendering Physics: Learned Opacity (α)</strong>
-                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">In rendering, this PDF represents "occupancy" or the probability of light being blocked. We scale this spatial contribution by an opacity factor <code>α</code>:</p>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">In rendering, this PDF represents the <strong>spatial extent</strong> of the Gaussian's contribution. It is scaled by a learned opacity factor <code>α</code> to determine precisely how much light it blocks at each point in space:</p>
                         <div class="math-block" id="math-influence"></div>
                     </li>
                 </ol>
@@ -169,7 +169,7 @@
             </div>
             
             <h3>B. Fast Tile-Based Rasterization</h3>
-            <p>This is the magic that enables real-time performance. Unlike traditional ray-tracing, 3DGS uses a high-speed GPU pipeline:</p>
+            <p>This is the magic that enables real-time performance. Unlike NeRF's expensive per-ray MLP queries, 3DGS uses a high-speed tile-based rasterization pipeline on the GPU:</p>
             <ol style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
                 <li><strong>Instancing & Culling</strong>: The screen is divided into 16x16 <strong>Tiles</strong>. Each Gaussian identifies which tiles it touches and creates an "instance" for each, allowing parallel processing.</li>
                 <li><strong>Radix Sort</strong>: Within each tile, the relevant Gaussians are **sorted by depth**. This precise ordering is the prerequisite for correct alpha blending.</li>
@@ -268,7 +268,10 @@
                         <tr style="border-bottom: 1px solid var(--nord2);">
                             <td style="padding: 1rem; font-weight: bold;">Rendering Speed</td>
                             <td style="padding: 1rem; color: var(--nord14);">Extremely Fast (Hardware Accelerated)</td>
-                            <td style="padding: 1rem; color: var(--nord11);">Very Slow (Requires Ray-marching MLPs)</td>
+                            <td style="padding: 1rem; color: var(--nord11);">
+                                <strong>Very Slow</strong> in original formulation (Ray-marching MLPs).<br>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">* Newer variants like Instant-NGP are much faster but still involve network queries.</span>
+                            </td>
                             <td style="padding: 1rem; color: var(--nord14);">Extremely Fast (Tile-based Rasterization)</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--nord2);">

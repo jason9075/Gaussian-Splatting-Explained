@@ -87,7 +87,7 @@
 
         <section id="mathematics">
             <h2>3. 高斯球解剖學 (幾何與外觀)</h2>
-            <p>定義這個核心單元：3D 高斯核 (3D Gaussian Kernel)。</p>
+            <p>讓我們來定義這個核心單元：3D 高斯核 (3D Gaussian Kernel)。</p>
             
             <h3>機率密度函數 (PDF)</h3>
             <div class="math-block" id="math-pdf"></div>
@@ -110,7 +110,7 @@
                     </li>
                     <li>
                         <strong>渲染物理意義：學習到的不透明度 (α)</strong>
-                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">在渲染過程中，這個 PDF 代表了空間佔用率。我們將這個空間貢獻乘以一個不透明度係數 <code>α</code>：</p>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">在渲染過程中，這個 PDF 代表了高斯球貢獻的<strong>空間分佈規模 (Spatial Extent)</strong>。我們將這個空間貢獻乘以一個學習到的不透明度係數 <code>α</code>，來精確決定它在空間中各個點上阻擋了多少光線：</p>
                         <div class="math-block" id="math-influence"></div>
                     </li>
                 </ol>
@@ -167,7 +167,7 @@
             </div>
 
             <h3>B. 快速分塊光柵化 (Tile-Based Rasterization)</h3>
-            <p>這是實現即時渲染的魔力所在。不同於傳統的射線追蹤 (Ray Tracing)，3DGS 使用了極速的 GPU 管線流程：</p>
+            <p>這是實現即時渲染的魔力所在。不同於 NeRF 昂貴的逐射線 MLP 查詢，3DGS 在 GPU 上使用了極速的分塊光柵化管線：</p>
             <ol style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
                 <li><strong>實例化與剔除 (Instancing)</strong>：將螢幕劃分為 16x16 的<strong>小塊 (Tiles)</strong>。每個高斯球會計算它觸及哪些 Tiles，並為每個 Tile 產生一個「副本（實例）」，這允許我們進行平行處理。</li>
                 <li><strong>基數排序 (Radix Sort)</strong>：在每個 Tile 內部，該區域內的所有高斯球會依照<strong>深度進行排序</strong>。這種精確的順序是後續 Alpha 混合能呈現正確前後關係的前提。</li>
@@ -262,7 +262,10 @@
                         <tr style="border-bottom: 1px solid var(--nord2);">
                             <td style="padding: 1rem; font-weight: bold;">渲染速度</td>
                             <td style="padding: 1rem; color: var(--nord14);">極快 (硬體加速)</td>
-                            <td style="padding: 1rem; color: var(--nord11);">緩慢 (需要神經網路推理)</td>
+                            <td style="padding: 1rem; color: var(--nord11);">
+                                <strong>原始版本極慢</strong> (需射線步進 MLP)。<br>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">* 較新的變體如 Instant-NGP 已大幅提升速度，但仍需進行頻繁的網路查詢。</span>
+                            </td>
                             <td style="padding: 1rem; color: var(--nord14);">極快 (分塊光柵化)</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--nord2);">
