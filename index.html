@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Gaussian Splatting: Technical Tutorial</title>
+    <!-- Emoji Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>">
     <!-- KaTeX CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <!-- Import Maps for ES Modules natively in browser -->
@@ -111,6 +113,9 @@
                     </div>
                 </div>
             </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem;">
+                * Note: This demo rotates on a single axis for simplicity. 3DGS uses <strong>Quaternions</strong> (w, x, y, z) to represent and optimize full 3D rotation.
+            </p>
             <blockquote>Note: This ensures the matrix remains Positive Semi-Definite (PSD) during optimization.</blockquote>
 
             <h3 id="sh-color">3.2 View-Dependent Color (Spherical Harmonics)</h3>

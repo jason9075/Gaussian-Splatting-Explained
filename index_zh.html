@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Gaussian Splatting 技術教學：從點雲到連續體積的進化</title>
+    <!-- Emoji Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>">
     <!-- KaTeX CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <!-- Import Maps for ES Modules natively in browser -->
@@ -109,6 +111,9 @@
                     </div>
                 </div>
             </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem;">
+                * 註：在本展示中，為求簡潔，我們僅呈現單一軸向的旋轉。在實際的 3DGS 中，會使用<strong>四元數 (Quaternions)</strong> 來表示與最佳化完整的三維旋轉。
+            </p>
             <blockquote>註：這能確保矩陣在最佳化過程中始終保持正定 (Positive Semi-Definite)。</blockquote>
 
             <h3 id="sh-color">3.2 視角相關顏色 (球面諧波)</h3>

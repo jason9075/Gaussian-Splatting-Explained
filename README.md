@@ -6,6 +6,8 @@
 
 An interactive, visual, and highly accessible tutorial designed to explain the core concepts of **3D Gaussian Splatting (3DGS)** from the ground up. This project breaks down complex mathematical papers into intuitive, hands-on 3D demonstrations directly in your browser.
 
+👉 **[Live Demo](https://jason9075.github.io/Gaussian-Splatting-Explained/)**
+
 🌐 **Dual Language Support**: Available in both English and Traditional Chinese (繁體中文).
 
 ## ✨ Features
