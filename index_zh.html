@@ -41,6 +41,7 @@
                     <li><a href="#algorithm">4. 前向傳播 (著色渲染)</a></li>
                     <li><a href="#optimization">5. 反向傳播 (最佳化)</a></li>
                     <li><a href="#comparison">6. 技術對比 (3DGS vs NeRF)</a></li>
+                    <li><a href="#mesh-extraction">7. 從噴濺到網格 (Marching Cubes)</a></li>
                 </ul>
             </nav>
         </div>
@@ -252,6 +253,42 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        <section id="mesh-extraction">
+            <h2>7. 從噴濺到網格 (Marching Cubes)</h2>
+            <p>3D 高斯球是體積態的擬合——這對照片級渲染非常完美，但對傳統的物理引擎或 3D 軟體來說卻難以處理。為了得到標準的三角形網格，我們通常使用 <strong>SDF-to-SURFACE</strong> 的處理流程。</p>
+            
+            <div style="background: var(--nord2); padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                <h4 style="margin-top: 0; color: var(--accent-blue);">SDF-to-SURFACE 處理流程</h4>
+                <ol style="margin-bottom: 0; display: flex; flex-direction: column; gap: 1rem;">
+                    <li><strong>虛擬相機渲染</strong>：在訓練好的高斯場周圍佈置虛擬相機，渲染出大量高解析度的深度圖 (Depth Maps) 與不透明度圖 (Opacity Maps)（例如 SuGaR 或 2DGS 的做法）。</li>
+                    <li><strong>TSDF 融合 (加權整合)</strong>：
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">對於 3D 體素 (Voxel) 網格中的每個點，我們沿著相機射線計算它與觀測到的深度表面之間的「有號距離」。接著在多個視角間進行<strong>加權累加 (Weighted Averaging)</strong>，這是讓噪雜的深度圖整合成一致表面的關鍵。</p>
+                        <p style="font-size: 0.85rem; color: var(--nord10); margin-top: 0.5rem;"><em>TSDF 中的 「T」代表 Truncated (截斷)：為了節省記憶體與運算成本，我們僅在表面附近的<strong>窄帶 (Narrow Band)</strong> 內儲存有效的距離值，超出截斷距離則不予計入。</em></p>
+                    </li>
+                    <li><strong>尋找 0-Level 等值面</strong>：尋找場中數值從<strong>正 (外部)</strong> 轉變為<strong>負 (內部)</strong> 的精確交界處。
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-top: 0.3rem;">* 註：正/外部、負/內部的慣例常見於 nvblox 與 KinectFusion，但部分實作可能相反。</span>
+                    </li>
+                    <li><strong>移動立方體演算法 (Marching Cubes, MC)</strong>：沿著這個 0-level 邊界構建三角形，生成最終的幾何網格。</li>
+                </ol>
+            </div>
+
+            <div style="background: rgba(136, 192, 208, 0.05); border: 1px solid var(--nord9); padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                <h4 style="margin-top: 0; color: var(--nord9);">超越 TSDF：現代研究方向</h4>
+                <p style="font-size: 0.95rem;">雖然「深度圖 + TSDF 融合」是主流路線，但許多新技術嘗試直接在訓練中約束表面幾何：</p>
+                <ul style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    <li><strong>SuGaR / 2DGS</strong>：透過正規化 (Regularization) 強制高斯球變扁並貼合表面。</li>
+                    <li><strong>GOF</strong>：直接在 Gaussian 表示法上定義基於透明度的 level set，跳過虛擬渲染步驟。</li>
+                </ul>
+            </div>
+
+            <div style="border-left: 3px solid var(--nord9); padding-left: 1.5rem; margin: 2rem 0;">
+                <h5 style="margin-top: 0; color: var(--nord9);">技術洞察：視覺化與幾何提取</h5>
+                <p style="font-size: 0.9rem;">像 <strong>nvblox</strong> 這樣的現代引擎可以即時顯示 TSDF 場，但它們使用的是 <strong>Ray Casting (光線投射)</strong> 技術。這僅是用於螢幕顯示——若要提取真正的幾何模型供其他軟體使用，仍需執行 <strong>Marching Cubes</strong>。</p>
+            </div>
+
+            <div id="mesh-demo" class="demo-viewport">
+                <!-- Voxel Slice 展示 -->
             </div>
         </section>
 

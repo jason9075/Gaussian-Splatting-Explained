@@ -4,6 +4,7 @@ import { initProjectionDemo } from './demos/ProjectionDemo.js';
 import { initSortingDemo } from './demos/SortingDemo.js';
 import { initColmapDemo } from './demos/ColmapDemo.js';
 import { initSHDemo } from './demos/SphericalHarmonicsDemo.js';
+import { initMeshExtractionDemo } from './demos/MeshExtractionDemo.js';
 
 // Initialize Math Rendering
 const mathElements = {
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initProjectionDemo('projection-demo');
     initSortingDemo('sorting-demo');
     initSHDemo('sh-demo');
+    initMeshExtractionDemo('mesh-demo');
 
     // Sidebar Toggle Logic
     const toggleBtn = document.getElementById('sidebar-toggle');

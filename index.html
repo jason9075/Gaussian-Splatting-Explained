@@ -41,6 +41,7 @@
                 <li><a href="#algorithm">4. The Forward Pass (Rendering)</a></li>
                 <li><a href="#optimization">5. The Backward Pass (Optimization)</a></li>
                 <li><a href="#comparison">6. Comparison (3DGS vs NeRF)</a></li>
+                <li><a href="#mesh-extraction">7. From Splats to Mesh (Marching Cubes)</a></li>
                 </ul>
             </nav>
         </div>
@@ -282,6 +283,42 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        <section id="mesh-extraction">
+            <h2>7. From Splats to Mesh (Marching Cubes)</h2>
+            <p>3D Gaussians are volumetric blobs—great for photorealistic rendering, but difficult for traditional physics or 3D engines to handle. To get a standard triangle mesh, we use a pipeline often referred to as <strong>SDF-to-SURFACE</strong>.</p>
+            
+            <div style="background: var(--nord2); padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                <h4 style="margin-top: 0; color: var(--accent-blue);">The SDF-to-SURFACE Pipeline</h4>
+                <ol style="margin-bottom: 0; display: flex; flex-direction: column; gap: 1rem;">
+                    <li><strong>Virtual Rendering</strong>: Projections from "virtual cameras" generate high-resolution Depth and Opacity maps from the trained Gaussian field.</li>
+                    <li><strong>TSDF Fusion (Weighted Integration)</strong>: 
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">For each voxel in a 3D grid, we calculate the signed distance to the observed depth surface along the camera ray. These distances are then <strong>weighted and averaged</strong> across multiple views to filter out noise and create a coherent field.</p>
+                        <p style="font-size: 0.85rem; color: var(--nord10); margin-top: 0.5rem;"><em>The "T" in TSDF (Truncated): To save memory and compute, we only store distance values within a <strong>narrow band</strong> near the surface. Outside this band, the value is truncated.</em></p>
+                    </li>
+                    <li><strong>Finding the 0-Level Set</strong>: We identify the precise boundary where the field transitions from <strong>Positive (Outside)</strong> to <strong>Negative (Inside)</strong>. 
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-top: 0.3rem;">* Note: The +/- convention is a common standard (e.g., nvblox, KinectFusion), but some implementations may swap them.</span>
+                    </li>
+                    <li><strong>Marching Cubes (MC)</strong>: The final geometric mesh is extracted by constructing triangles along this 0-level boundary.</li>
+                </ol>
+            </div>
+
+            <div style="background: rgba(136, 192, 208, 0.05); border: 1px solid var(--nord9); padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                <h4 style="margin-top: 0; color: var(--nord9);">Beyond TSDF: Modern Approaches</h4>
+                <p style="font-size: 0.95rem;">While Depth-to-TSDF is a mainstream route, newer research directly enforces surface geometry during training:</p>
+                <ul style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    <li><strong>SuGaR / 2DGS</strong>: Uses regularization to force Gaussians to be flat and align with the surface.</li>
+                    <li><strong>GOF</strong>: Defines a transparency-based level set directly on the Gaussian representation to bypass the need for virtual rendering.</li>
+                </ul>
+            </div>
+
+            <div style="border-left: 3px solid var(--nord9); padding-left: 1.5rem; margin: 2rem 0;">
+                <h5 style="margin-top: 0; color: var(--nord9);">Technical Insight: Visualization vs. Extraction</h5>
+                <p style="font-size: 0.9rem;">Modern engines like <strong>nvblox</strong> can show the TSDF field in real-time, but they do so using <strong>Ray Casting</strong> (tracing a ray through the voxels until it hits a zero-crossing). This is only for display—extracting the actual geometry for other tools still requires <strong>Marching Cubes</strong>.</p>
+            </div>
+
+            <div id="mesh-demo" class="demo-viewport">
+                <!-- Voxel Slice and MC visualization here -->
             </div>
         </section>
 
