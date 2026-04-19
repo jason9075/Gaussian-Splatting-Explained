@@ -1,0 +1,68 @@
+## Technical Guideline: 3D Gaussian Splatting Explained
+
+### 1. Introduction: From Discrete Points to Continuous Volumes
+The goal of this section is to explain the "Why." Why move away from Point Clouds or NeRFs?
+* **The Problem**: Point clouds are discrete and sparse; NeRFs are continuous but computationally expensive to query.
+* **The Solution**: Represent the scene as a collection of millions of semi-transparent 3D Gaussian kernels.
+* **The Intuition**: Imagine "painting" a scene with fuzzy, translucent stickers that have specific shapes, colors, and orientations.
+
+---
+
+### 2. Mathematical Foundation: The 3D Gaussian Kernel
+Define the primitive that makes everything work.
+* **The Probability Density Function (PDF)**:
+    $$G(x) = e^{-\frac{1}{2}(x-\mu)^T \Sigma^{-1} (x-\mu)}$$
+* **Decomposing the Covariance ($\Sigma$)**: Explain that storing a full covariance matrix is difficult to optimize. Instead, use **Scaling ($S$)** and **Rotation ($R$, via Quaternions)**:
+    $$\Sigma = RSS^TR^T$$
+    > **Note**: This ensures the matrix remains Positive Semi-Definite (PSD) during optimization.
+
+
+
+---
+
+### 3. The Core Algorithm: Step-by-Step
+Break the rendering pipeline into digestible technical segments.
+
+#### A. Projection (3D to 2D Splatting)
+Explain how a 3D ellipsoid becomes a 2D "splat" on the screen.
+* **The Transformation**: Use the Viewing Transformation matrix ($W$) and the Jacobian ($J$) of the affine approximation of the projective transformation.
+* **The 2D Covariance**:
+    $$\Sigma' = J W \Sigma W^T J^T$$
+    
+#### B. Fast Tile-Based Rasterization
+This is where the real-time magic happens.
+* **Instancing and Culling**: Divide the screen into $16 \times 16$ tiles. Only process Gaussians that intersect with a tile.
+* **Depth Sorting**: Sort Gaussians by their depth ($Z$-buffer) within each tile to ensure correct occlusion.
+* **Alpha Blending (Volumetric Rendering)**:
+    For a pixel, the color $C$ is calculated by blending $N$ ordered Gaussians:
+    $$C = \sum_{i \in N} c_i \alpha_i \prod_{j=1}^{i-1} (1 - \alpha_j)$$
+    *Where $c_i$ is the color (often derived from Spherical Harmonics) and $\alpha_i$ is the opacity.*
+
+
+
+---
+
+### 4. Adaptive Density Control (Optimization)
+Explain how the model "learns" where to add more detail.
+* **Under-reconstruction**: If a region is sparse, **Clone** the Gaussian.
+* **Over-reconstruction**: If a Gaussian covers too large an area with high variance, **Split** it into two smaller ones.
+* **Pruning**: Remove Gaussians with near-zero opacity or those that become too large.
+
+---
+
+### 5. Implementation Strategy (The Developer's Perspective)
+Since you're building this as a static page, focus on these performance-friendly tools:
+
+| Component | Recommendation |
+| :--- | :--- |
+| **Math Rendering** | **KaTeX** (Faster than MathJax for static sites). |
+| **Visuals** | **Three.js** or **WebGPU** for interactive 2D splat demos. |
+| **Styling** | **Tailwind CSS** using the `prose` plugin for technical writing. |
+| **Static Generator** | **Astro** or **Hugo** (Ideal for NixOS-based CI/CD workflows). |
+
+---
+
+### 6. Interactive Element Ideas
+* **Covariance Slider**: A slider that allows users to change $S$ and $R$ values to see how the 2D splat shape changes in real-time.
+* **Layer Toggle**: A button to toggle between the raw Gaussian ellipsoids (wireframe) and the final blended result.
+
