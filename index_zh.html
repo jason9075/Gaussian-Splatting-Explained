@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gaussian Splatting 技術教學：從點雲到連續體積的進化</title>
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <!-- Import Maps for ES Modules natively in browser -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+                "katex": "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.mjs"
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+    <div class="lang-switcher">
+        <a href="index.html" class="lang-btn">English</a>
+        <a href="index_zh.html" class="lang-btn active">繁體中文</a>
+    </div>
+
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-content">
+            <h3 style="margin-top: 0;">目錄</h3>
+            <nav>
+                <ul>
+                    <li><a href="#introduction">1. 前言 (核心理念)</a></li>
+                    <li><a href="#colmap-sfm">2. 初始化 (種子點 / SfM)</a></li>
+                    <li><a href="#mathematics">3. 高斯球解剖學</a>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 0.9rem;">
+                            <li><a href="#mathematics">3.1 幾何形狀 (Sigma)</a></li>
+                            <li><a href="#sh-color">3.2 外觀呈現 (SH)</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#algorithm">4. 前向傳播 (著色渲染)</a></li>
+                    <li><a href="#optimization">5. 反向傳播 (最佳化)</a></li>
+                    <li><a href="#comparison">6. 技術對比 (3DGS vs NeRF)</a></li>
+                </ul>
+            </nav>
+        </div>
+        <button id="sidebar-toggle" class="sidebar-toggle-tab">☰</button>
+    </aside>
+
+    <div class="layout-wrapper" id="layout-wrapper">
+        <div class="container">
+        <header>
+            <h1>3D Gaussian Splatting</h1>
+            <p>從離散點雲到連續體積的視覺革命</p>
+        </header>
+
+        <section id="introduction">
+            <h2>1. 前言 (核心理念)</h2>
+            <p>為什麼要放棄點雲 (Point Clouds) 或 NeRF？</p>
+            <ul>
+                <li><strong>問題點</strong>：點雲是離散且稀疏的；NeRF 雖然連續，但渲染時的計算量極大（需要不斷查詢神經網路）。</li>
+                <li><strong>解決方案</strong>：將場景表示為數百萬個半透明的「3D 高斯核 (Gaussian Kernels)」。</li>
+                <li><strong>直覺理解</strong>：想像用一堆模糊、半透明的「貼紙」來畫畫，每張貼紙都有特定的形狀、顏色和朝向。</li>
+            </ul>
+        </section>
+
+        <section id="colmap-sfm">
+            <h2>2. 初始化 (種子點 / SfM)</h2>
+            <p>在最佳化高斯球之前，我們需要知道物體在空間中的大致位置。</p>
+            <ul>
+                <li><strong>多視角拍攝</strong>：從不同角度繞著物體拍攝多張照片。</li>
+                <li><strong>運動復原 (SfM)</strong>：使用像是 COLMAP 的軟體分析照片中的視覺特徵，透過三角測量定出 3D 空間點。</li>
+                <li><strong>稀疏點雲</strong>：產出的結果是一群漂浮的點，這些點將作為高斯噴濺 (Splatting) 的起始中心位置。</li>
+            </ul>
+
+            <div style="background: var(--nord2); padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+                <h4 style="margin-top: 0; color: var(--nord8);">為什麼 SfM 點雲是「稀疏」的？</h4>
+                <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">COLMAP 僅在具有高度信心的特徵匹配（如銳利的邊緣或紋理）時才進行三角測量。對於平滑的牆面或低紋理區域，常會留下一片空白。</p>
+                <p style="margin-bottom: 0; font-size: 0.95rem;"><strong>3DGS 的優勢：</strong> 我們並不只停留在點雲。3DGS 將這些稀疏點作為「種子」，並將它們物理性地擴張（Splat）成重疊的、模糊的體積橢圓球。透過最佳化，讓它們「生長」成一個密集且連續的場景。</p>
+            </div>
+            
+            <div id="colmap-demo" class="demo-viewport">
+                <!-- Colmap SfM 視覺化 -->
+            </div>
+        </section>
+
+        <section id="mathematics">
+            <h2>3. 高斯球解剖學 (幾何與外觀)</h2>
+            <p>定義這個核心單元：3D 高斯核 (3D Gaussian Kernel)。</p>
+            
+            <h3>機率密度函數 (PDF)</h3>
+            <div class="math-block" id="math-pdf"></div>
+            
+            <h3>解析共變異數 (Σ)</h3>
+            <p>儲存完整的共變異數矩陣很難進行最佳化。相反地，我們將其拆解為 <strong>縮放 (S)</strong> 與 <strong>旋轉 (R，透過四元數)</strong>：</p>
+            <div class="math-block" id="math-covariance"></div>
+            
+            <div id="kernel-demo" class="demo-viewport">
+                <div class="controls">
+                    <div class="control-item">
+                        <label>縮放 X</label>
+                        <input type="range" id="scale-x" min="0.1" max="3" step="0.1" value="1.5">
+                    </div>
+                    <div class="control-item">
+                        <label>縮放 Y</label>
+                        <input type="range" id="scale-y" min="0.1" max="3" step="0.1" value="0.8">
+                    </div>
+                    <div class="control-item">
+                        <label>旋轉</label>
+                        <input type="range" id="rotation-z" min="0" max="6.28" step="0.1" value="0.5">
+                    </div>
+                </div>
+            </div>
+            <blockquote>註：這能確保矩陣在最佳化過程中始終保持正定 (Positive Semi-Definite)。</blockquote>
+
+            <h3 id="sh-color">3.2 視角相關顏色 (球面諧波)</h3>
+            <p>3DGS 不僅僅儲存單一的 RGB 值。它使用 <strong>球面諧波 (Spherical Harmonics, SH)</strong>，讓高斯球從不同角度看有不同的顏色——呈現出高光與反射效果。</p>
+            
+            <div class="math-block" id="math-sh"></div>
+            
+            <p><strong>直覺理解</strong>：想像每個高斯球「貼紙」都覆蓋了一層雷射防偽材質。當你繞著它走動，顏色會隨你的視角而閃爍變化。</p>
+
+            <div id="sh-demo" class="demo-viewport">
+                <!-- Spherical Harmonics 視覺化 -->
+            </div>
+        </section>
+
+        <section id="algorithm">
+            <h2>4. 前向傳播 (投影與分塊光柵化)</h2>
+            
+            <h3>A. 投影 (3D to 2D Splatting)</h3>
+            <p>3D 的橢圓球是如何變成螢幕上的 2D 「噴濺」畫像。</p>
+            <div class="math-block" id="math-projection"></div>
+            
+            <div id="projection-demo" class="demo-viewport">
+                <!-- 投影視覺化 -->
+            </div>
+
+            <h3>B. 快速分塊光柵化 (Tile-Based Rasterization)</h3>
+            <p>這是實現即時渲染的魔力所在：</p>
+            <ul>
+                <li><strong>實例化與剔除</strong>：將螢幕劃分為 16 × 16 的小塊 (Tiles)。</li>
+                <li><strong>Alpha 混合 (輻射場方程式)</strong>：
+                    <p>最後，我們透過由遠到近的順序混合所有重疊的高斯球來計算像素顏色。這是將數十億個粒子組合成連續影像的「黏著劑」：</p>
+                    <div class="math-block" id="math-alpha"></div>
+                    
+                    <p style="font-size: 0.95rem; background: var(--nord2); padding: 1.5rem; border-radius: 8px;">
+                        <strong>理解透射率 (Transmittance)</strong>：<code>Ti</code> 項被稱為透射率。它代表光線通過前方所有高斯球到達相機的機率。
+                        <br><br>
+                        如果前方的球體非常不透明（Alpha 高），透射率會降至零，後方的球體就會變得不可見。
+                    </p>
+                </li>
+            </ul>
+
+            <div id="sorting-demo" class="demo-viewport">
+                <div class="controls">
+                    <div class="control-item">
+                        <label>渲染步驟 (從後到前)</label>
+                        <input type="range" id="render-step" min="0" max="5" step="1" value="5">
+                    </div>
+                    <p style="margin-top: 8px; margin-bottom: 0px; font-size: 0.8rem;" id="step-label">所有噴濺已渲染</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="optimization">
+            <h2>5. 反向傳播 (最佳化與密度控制)</h2>
+            <p>高斯球是如何學會貼合照片的？這就是利用 <strong>隨機梯度下降 (SGD)</strong> 的訓練迴圈。</p>
+            
+            <h3>A. 損失函數 (Loss Function)</h3>
+            <p>每次迭代中，我們將渲染出的影像 (I_render) 與真實照片 (I_gt) 進行比較，計算誤差。</p>
+            <div class="math-block" id="math-loss"></div>
+            <p>我們結合了 <strong>L1 損失</strong>（像素差異）與 <strong>D-SSIM</strong>（結構相似性，用以保留銳利邊緣）。</p>
+
+            <h3>B. 自適應密度控制 (Densification)</h3>
+            <p>這是 3DGS 論文的核心貢獻。演算法會根據需要自動增加或減少高斯球：</p>
+            
+            <div class="diagram-container">
+                <div class="diagram-card">
+                    <h4>Clone (重建不足)</h4>
+                    <div class="diagram-visual">
+                        <div class="blob-shape blob-small"></div>
+                        <div class="arrow">→</div>
+                        <div style="display: flex; gap: 4px;">
+                            <div class="blob-shape blob-small"></div>
+                            <div class="blob-shape blob-small"></div>
+                        </div>
+                    </div>
+                    <div class="diagram-desc">
+                        當高斯球<strong>太小</strong>但誤差卻很大時，我們會<strong>複製 (Clone)</strong> 它來填補空缺。
+                    </div>
+                </div>
+
+                <div class="diagram-card">
+                    <h4>Split (重建過度)</h4>
+                    <div class="diagram-visual">
+                        <div class="blob-shape blob-large"></div>
+                        <div class="arrow">→</div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="blob-shape blob-medium"></div>
+                            <div class="blob-shape blob-medium"></div>
+                        </div>
+                    </div>
+                    <div class="diagram-desc">
+                        當高斯球<strong>太大</strong>導致細節模糊時，我們會將其<strong>分割 (Split)</strong> 成多個精細小球。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison">
+            <h2>6. 技術對比 (3DGS vs. NeRF vs. Mesh)</h2>
+            <p>總結 3D Gaussian Splatting 的突破性優勢：</p>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--nord1); border-radius: 8px; overflow: hidden;">
+                    <thead>
+                        <tr style="background: var(--nord3); color: var(--nord6); text-align: left;">
+                            <th style="padding: 1rem;">特性</th>
+                            <th style="padding: 1rem;">傳統網格 (Mesh)</th>
+                            <th style="padding: 1rem;">NeRF (神經輻射場)</th>
+                            <th style="padding: 1rem;">3D Gaussian Splatting</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--nord2);">
+                            <td style="padding: 1rem; font-weight: bold;">表現形式</td>
+                            <td style="padding: 1rem;">三角形多邊形</td>
+                            <td style="padding: 1rem;">權重連續的神經網路</td>
+                            <td style="padding: 1rem;">顯式的體積點雲單元</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--nord2);">
+                            <td style="padding: 1rem; font-weight: bold;">渲染速度</td>
+                            <td style="padding: 1rem; color: var(--nord14);">極快 (硬體加速)</td>
+                            <td style="padding: 1rem; color: var(--nord11);">緩慢 (需要神經網路推理)</td>
+                            <td style="padding: 1rem; color: var(--nord14);">極快 (分塊光柵化)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--nord2);">
+                            <td style="padding: 1rem; font-weight: bold;">視覺品質</td>
+                            <td style="padding: 1rem; color: var(--nord13);">難以處理半透明材質</td>
+                            <td style="padding: 1rem; color: var(--nord14);">照片級真實度</td>
+                            <td style="padding: 1rem; color: var(--nord14);">照片級真實度/視角相關</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1rem; font-weight: bold;">可編輯性</td>
+                            <td style="padding: 1rem; color: var(--nord14);">容易 (直接移動頂點)</td>
+                            <td style="padding: 1rem; color: var(--nord11);">極難 (黑盒神經網路)</td>
+                            <td style="padding: 1rem; color: var(--nord14);">容易 (顯式的空間點)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            <p>專為 3D 電腦視覺社群打造</p>
+            <a href="https://github.com/jason9075/Gaussian-Splatting-Explained" target="_blank" class="github-link">
+                <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                GitHub 專案連結
+            </a>
+        </footer>
+    </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
