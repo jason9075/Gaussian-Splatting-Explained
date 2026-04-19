@@ -58,8 +58,8 @@
             <h3>The Probability Density Function (PDF)</h3>
             <div class="math-block" id="math-pdf"></div>
             
-            <h3>Decomposing the Covariance ($\Sigma$)</h3>
-            <p>Storing a full covariance matrix is difficult to optimize. Instead, we use <strong>Scaling ($S$)</strong> and <strong>Rotation ($R$, via Quaternions)</strong>:</p>
+            <h3>Decomposing the Covariance (Σ)</h3>
+            <p>Storing a full covariance matrix is difficult to optimize. Instead, we use <strong>Scaling (S)</strong> and <strong>Rotation (R, via Quaternions)</strong>:</p>
             <div class="math-block" id="math-covariance"></div>
             
             <div id="kernel-demo" class="demo-viewport">
@@ -96,8 +96,8 @@
             <h3>B. Fast Tile-Based Rasterization</h3>
             <p>This is where the real-time magic happens:</p>
             <ul>
-                <li><strong>Instancing and Culling</strong>: Divide the screen into $16 \times 16$ tiles.</li>
-                <li><strong>Depth Sorting</strong>: Sort Gaussians by their depth ($Z$-buffer) within each tile.</li>
+                <li><strong>Instancing and Culling</strong>: Divide the screen into 16 × 16 tiles.</li>
+                <li><strong>Depth Sorting</strong>: Sort Gaussians by their depth (Z-buffer) within each tile.</li>
                 <li><strong>Alpha Blending</strong>:
                     <div class="math-block" id="math-alpha"></div>
                 </li>
