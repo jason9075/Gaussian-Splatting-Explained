@@ -128,9 +128,15 @@
             <p>This is where the real-time magic happens:</p>
             <ul>
                 <li><strong>Instancing and Culling</strong>: Divide the screen into 16 × 16 tiles.</li>
-                <li><strong>Depth Sorting</strong>: Sort Gaussians by their depth (Z-buffer) within each tile.</li>
-                <li><strong>Alpha Blending</strong>:
+                <li><strong>Alpha Blending (The Radiance Field Equation)</strong>:
+                    <p>Finally, we compute the color of each pixel by blending all Gaussians that overlap it in back-to-front order. This is the "glue" that combines billions of particles into a single continuous image:</p>
                     <div class="math-block" id="math-alpha"></div>
+                    
+                    <p style="font-size: 0.95rem; background: var(--nord2); padding: 1.5rem; border-radius: 8px;">
+                        <strong>Understanding Transmittance</strong>: The term <code>Π(1 - α)</code> is called <em>Transmittance</em>. It represents the probability that light from a Gaussian can pass through all the Gaussians <em>in front of it</em> to reach the camera. 
+                        <br><br>
+                        If the Gaussians in front are very opaque (high Alpha), the transmittance drops to zero, and the background Gaussians become invisible.
+                    </p>
                 </li>
             </ul>
 
