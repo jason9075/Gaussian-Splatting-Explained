@@ -2,6 +2,7 @@ import katex from 'katex';
 import { initGaussianKernelDemo } from './demos/GaussianKernel.js';
 import { initProjectionDemo } from './demos/ProjectionDemo.js';
 import { initSortingDemo } from './demos/SortingDemo.js';
+import { initColmapDemo } from './demos/ColmapDemo.js';
 
 // Initialize Math Rendering
 const mathElements = {
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize Demos
+    initColmapDemo('colmap-demo');
     initGaussianKernelDemo('kernel-demo');
     initProjectionDemo('projection-demo');
     initSortingDemo('sorting-demo');

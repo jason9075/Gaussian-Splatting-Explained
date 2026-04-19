@@ -25,8 +25,9 @@
             <nav>
                 <ul>
                     <li><a href="#introduction">1. Introduction</a></li>
-                    <li><a href="#mathematics">2. Mathematical Foundation</a></li>
-                    <li><a href="#algorithm">3. The Core Algorithm</a></li>
+                <li><a href="#colmap-sfm">2. Initialization with COLMAP (SfM)</a></li>
+                <li><a href="#mathematics">3. Mathematical Foundation</a></li>
+                <li><a href="#algorithm">4. The Core Algorithm</a></li>
                 </ul>
             </nav>
         </div>
@@ -51,8 +52,22 @@
             </ul>
         </section>
 
+        <section id="colmap-sfm">
+            <h2>2. Initialization with COLMAP (SfM)</h2>
+            <p>Before optimizing any 3D Gaussians, we need an initial guess of where the object is in space.</p>
+            <ul>
+                <li><strong>Multiple Perspectives</strong>: We capture images of the object from various angles around it.</li>
+                <li><strong>Structure-from-Motion (SfM)</strong>: Software like COLMAP analyzes visual features across these images to triangulate points in 3D space.</li>
+                <li><strong>Sparse Point Cloud</strong>: The result is a cloud of floating points. These points serve as the initial centers (positions) for our Gaussian splats!</li>
+            </ul>
+            
+            <div id="colmap-demo" class="demo-viewport">
+                <!-- Colmap SfM visualization here -->
+            </div>
+        </section>
+
         <section id="mathematics">
-            <h2>2. Mathematical Foundation</h2>
+            <h2>3. Mathematical Foundation</h2>
             <p>Define the primitive that makes everything work: the 3D Gaussian Kernel.</p>
             
             <h3>The Probability Density Function (PDF)</h3>
@@ -83,7 +98,7 @@
         </section>
 
         <section id="algorithm">
-            <h2>3. The Core Algorithm</h2>
+            <h2>4. The Core Algorithm</h2>
             
             <h3>A. Projection (3D to 2D Splatting)</h3>
             <p>How a 3D ellipsoid becomes a 2D "splat" on the screen.</p>
