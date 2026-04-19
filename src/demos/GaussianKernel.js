@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 export function initGaussianKernelDemo(containerId) {
     const container = document.getElementById(containerId);
@@ -11,6 +12,10 @@ export function initGaussianKernelDemo(containerId) {
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
     // Grid Helper
     const grid = new THREE.GridHelper(10, 10, 0x333333, 0x222222);
@@ -61,8 +66,10 @@ export function initGaussianKernelDemo(containerId) {
     function animate() {
         requestAnimationFrame(animate);
         
-        // Subtle idle rotation
-        ellipsoid.rotation.y += 0.005;
+        controls.update(); // required if controls.enableDamping or controls.autoRotate are set
+        
+        // Subtle idle rotation (Optional, but kept to give it life if not dragging)
+        // ellipsoid.rotation.y += 0.005; 
         
         renderer.render(scene, camera);
     }
