@@ -24,9 +24,14 @@
             <h3 style="margin-top: 0;">Table of Contents</h3>
             <nav>
                 <ul>
-                    <li><a href="#introduction">1. Introduction</a></li>
+                <li><a href="#introduction">1. Introduction</a></li>
                 <li><a href="#colmap-sfm">2. Initialization with COLMAP (SfM)</a></li>
-                <li><a href="#mathematics">3. Mathematical Foundation</a></li>
+                <li><a href="#mathematics">3. Mathematical Foundation</a>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 0.9rem;">
+                        <li><a href="#mathematics">3.1 PDF & Covariance</a></li>
+                        <li><a href="#sh-color">3.2 Spherical Harmonics</a></li>
+                    </ul>
+                </li>
                 <li><a href="#algorithm">4. The Core Algorithm</a></li>
                 </ul>
             </nav>
@@ -95,6 +100,17 @@
                 </div>
             </div>
             <blockquote>Note: This ensures the matrix remains Positive Semi-Definite (PSD) during optimization.</blockquote>
+
+            <h3 id="sh-color">3.2 View-Dependent Color (Spherical Harmonics)</h3>
+            <p>3DGS doesn't just store a single RGB value. Instead, it uses <strong>Spherical Harmonics (SH)</strong> so that a Gaussian can look different from different angles—reproducing highlights and reflections.</p>
+            
+            <div class="math-block" id="math-sh"></div>
+            
+            <p><strong>The Intuition</strong>: Imagine each Gaussian "sticker" is covered in a holographic material. As you walk around it, the color shifts and glitters based on your perspective.</p>
+
+            <div id="sh-demo" class="demo-viewport">
+                <!-- Spherical Harmonics visualization here -->
+            </div>
         </section>
 
         <section id="algorithm">

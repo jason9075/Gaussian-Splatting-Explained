@@ -3,11 +3,13 @@ import { initGaussianKernelDemo } from './demos/GaussianKernel.js';
 import { initProjectionDemo } from './demos/ProjectionDemo.js';
 import { initSortingDemo } from './demos/SortingDemo.js';
 import { initColmapDemo } from './demos/ColmapDemo.js';
+import { initSHDemo } from './demos/SphericalHarmonicsDemo.js';
 
 // Initialize Math Rendering
 const mathElements = {
     'math-pdf': 'G(x) = e^{-\\frac{1}{2}(x-\\mu)^T \\Sigma^{-1} (x-\\mu)}',
     'math-covariance': '\\Sigma = RSS^TR^T',
+    'math-sh': 'c(\\theta, \\phi) = \\sum_{l=0}^{k} \\sum_{m=-l}^{l} y_{lm} Y_{lm}(\\theta, \\phi)',
     'math-projection': '\\Sigma\' = J W \\Sigma W^T J^T',
     'math-alpha': 'C = \\sum_{i \\in N} c_i \\alpha_i \\prod_{j=1}^{i-1} (1 - \\alpha_j)'
 };
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGaussianKernelDemo('kernel-demo');
     initProjectionDemo('projection-demo');
     initSortingDemo('sorting-demo');
+    initSHDemo('sh-demo');
 
     // Sidebar Toggle Logic
     const toggleBtn = document.getElementById('sidebar-toggle');
