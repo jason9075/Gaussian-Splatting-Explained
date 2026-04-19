@@ -8,6 +8,7 @@ import { initSHDemo } from './demos/SphericalHarmonicsDemo.js';
 // Initialize Math Rendering
 const mathElements = {
     'math-pdf': 'G(x) = e^{-\\frac{1}{2}(x-\\mu)^T \\Sigma^{-1} (x-\\mu)}',
+    'math-influence': 'Intensity(x) = \\alpha \\cdot e^{-\\frac{1}{2}(x-\\mu)^T \\Sigma^{-1} (x-\\mu)}',
     'math-covariance': '\\Sigma = RSS^TR^T',
     'math-sh': 'c(\\theta, \\phi) = \\sum_{l=0}^{k} \\sum_{m=-l}^{l} y_{lm} Y_{lm}(\\theta, \\phi)',
     'math-projection': '\\Sigma\' = J W \\Sigma W^T J^T',

@@ -91,6 +91,30 @@
             
             <h3>The Probability Density Function (PDF)</h3>
             <div class="math-block" id="math-pdf"></div>
+
+            <div style="margin: 2rem 0;">
+                <h4 style="color: var(--nord8);">Why use a PDF for a "Splat"?</h4>
+                <p>By defining each splat as a Probability Density Function, we move from discrete points to a <strong>continuous and differentiable</strong> volume. Here is why this is crucial:</p>
+                
+                <ol style="display: flex; flex-direction: column; gap: 1.5rem; padding-left: 1.2rem;">
+                    <li>
+                        <strong>Mathematical Definition: The Normal Distribution</strong>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">Each Gaussian kernel is essentially a 3D Normal Distribution. The value <code>f(x)</code> describes the "influence" of that splat at any point <code>x</code> in space.
+                        <br>— <strong>μ (Mean)</strong>: Represents the center of the splat.
+                        <br>— <strong>Σ (Covariance)</strong>: Defines the shape, scale, and orientation.</p>
+                    </li>
+                    <li>
+                        <strong>From "Hard Edge" to "Soft Contribution"</strong>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">Unlike traditional meshes or points with hard boundaries, a PDF provides <strong>spatial continuity</strong>. Every point in space is "influenced" by every Gaussian to some degree, though it decays exponentially with distance.
+                        <br><br>Most importantly, it is <strong>Differentiable</strong>. Because the PDF is smooth, we can use gradient descent to optimize the splat's properties. We can calculate exactly how a tiny shift in position or shape affects the final image.</p>
+                    </li>
+                    <li>
+                        <strong>Rendering Physics: Learned Opacity (α)</strong>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">In rendering, this PDF represents "occupancy" or the probability of light being blocked. We scale this spatial contribution by an opacity factor <code>α</code>:</p>
+                        <div class="math-block" id="math-influence"></div>
+                    </li>
+                </ol>
+            </div>
             
             <h3>Decomposing the Covariance (Σ)</h3>
             <p>Storing a full covariance matrix is difficult to optimize. Instead, we use <strong>Scaling (S)</strong> and <strong>Rotation (R, via Quaternions)</strong>:</p>
