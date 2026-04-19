@@ -117,7 +117,9 @@
             </div>
             
             <h3>解析共變異數 (Σ)</h3>
-            <p>儲存完整的共變異數矩陣很難進行最佳化。相反地，我們將其拆解為 <strong>縮放 (S)</strong> 與 <strong>旋轉 (R，透過四元數)</strong>：</p>
+            <p>雖然一個 3D 高斯球是由 3x3 的對稱矩陣（具有 6 個自由度）所定義，但直接對這些數值進行最佳化是非常困難的。因為該矩陣必須始終保持為<strong>正定 (Positive Definite)</strong>（即所有特徵值 > 0），才能代表一個有效的、非退化的橢球體。</p>
+
+            <p>因此，我們將共變異數拆解為<strong>縮放 (S)</strong> 與<strong>旋轉 (R，透過四元數)</strong>。這種參數化方式允許最佳化器在空間中自由移動，同時保證產出的矩陣永遠落在有效的正定子集內：</p>
             <div class="math-block" id="math-covariance"></div>
             
             <div id="kernel-demo" class="demo-viewport">
@@ -139,7 +141,7 @@
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem;">
                 * 註：在本展示中，為求簡潔，我們僅呈現單一軸向的旋轉。在實際的 3DGS 中，會使用<strong>四元數 (Quaternions)</strong> 來表示與最佳化完整的三維旋轉。
             </p>
-            <blockquote>註：這能確保矩陣在最佳化過程中始終保持正定 (Positive Semi-Definite)。</blockquote>
+            <blockquote>註：這能確保矩陣在最佳化過程中始終保持<strong>正定</strong>（非退化狀態）。</blockquote>
 
             <h3 id="sh-color">3.2 視角相關顏色 (球面諧波)</h3>
             <p>3DGS 不僅僅儲存單一的 RGB 值。它使用 <strong>球面諧波 (Spherical Harmonics, SH)</strong>，讓高斯球從不同角度看有不同的顏色——呈現出高光與反射效果。</p>
@@ -165,20 +167,20 @@
             </div>
 
             <h3>B. 快速分塊光柵化 (Tile-Based Rasterization)</h3>
-            <p>這是實現即時渲染的魔力所在：</p>
-            <ul>
-                <li><strong>實例化與剔除</strong>：將螢幕劃分為 16 × 16 的小塊 (Tiles)。</li>
-                <li><strong>Alpha 混合 (輻射場方程式)</strong>：
-                    <p>最後，我們透過由遠到近的順序混合所有重疊的高斯球來計算像素顏色。這是將數十億個粒子組合成連續影像的「黏著劑」：</p>
-                    <div class="math-block" id="math-alpha"></div>
-                    
-                    <p style="font-size: 0.95rem; background: var(--nord2); padding: 1.5rem; border-radius: 8px;">
-                        <strong>理解透射率 (Transmittance)</strong>：<code>Ti</code> 項被稱為透射率。它代表光線通過前方所有高斯球到達相機的機率。
-                        <br><br>
-                        如果前方的球體非常不透明（Alpha 高），透射率會降至零，後方的球體就會變得不可見。
-                    </p>
-                </li>
-            </ul>
+            <p>這是實現即時渲染的魔力所在。不同於傳統的射線追蹤 (Ray Tracing)，3DGS 使用了極速的 GPU 管線流程：</p>
+            <ol style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                <li><strong>實例化與剔除 (Instancing)</strong>：將螢幕劃分為 16x16 的<strong>小塊 (Tiles)</strong>。每個高斯球會計算它觸及哪些 Tiles，並為每個 Tile 產生一個「副本（實例）」，這允許我們進行平行處理。</li>
+                <li><strong>基數排序 (Radix Sort)</strong>：在每個 Tile 內部，該區域內的所有高斯球會依照<strong>深度進行排序</strong>。這種精確的順序是後續 Alpha 混合能呈現正確前後關係的前提。</li>
+                <li><strong>平行 Alpha 混合</strong>：對於 Tile 內的每個像素，我們走訪排序好的清單，並利用<strong>體積渲染方程式</strong>計算最終顏色：</li>
+            </ol>
+            
+            <div style="background: var(--nord2); padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0;">
+                <h4 style="margin-top: 0; color: var(--accent-blue);">混合的物理機制</h4>
+                <div class="math-block" id="math-alpha"></div>
+                <p style="font-size: 0.95rem; margin-top: 1rem;">
+                    <strong>透射率 (Ti)</strong>：這個項代表光線能穿過前方所有高斯球到達相機的機率。如果前方的一個高斯球完全不透明，<code>Ti</code> 會降為零，導致後方的物體變得不可見。
+                </p>
+            </div>
 
             <div id="sorting-demo" class="demo-viewport">
                 <div class="controls">

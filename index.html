@@ -118,7 +118,9 @@
             </div>
             
             <h3>Decomposing the Covariance (Σ)</h3>
-            <p>Storing a full covariance matrix is difficult to optimize. Instead, we use <strong>Scaling (S)</strong> and <strong>Rotation (R, via Quaternions)</strong>:</p>
+            <p>While a 3D Gaussian is defined by a 3x3 symmetric matrix (6 degrees of freedom), optimizing these values directly is difficult because the matrix must remain <strong>Positive Definite</strong> (all eigenvalues > 0) to represent a valid, non-degenerate ellipsoid.</p>
+
+            <p>Instead, we decompose the covariance into <strong>Scaling (S)</strong> and <strong>Rotation (R, via Quaternions)</strong>. This parametrization allows the optimizer to move freely in space while ensuring the resulting matrix always lands in the valid positive-definite subset:</p>
             <div class="math-block" id="math-covariance"></div>
             
             <div id="kernel-demo" class="demo-viewport">
@@ -141,7 +143,7 @@
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem;">
                 * Note: This demo rotates on a single axis for simplicity. 3DGS uses <strong>Quaternions</strong> (w, x, y, z) to represent and optimize full 3D rotation.
             </p>
-            <blockquote>Note: This ensures the matrix remains Positive Semi-Definite (PSD) during optimization.</blockquote>
+            <blockquote>Note: This ensures the matrix remains <strong>Positive Definite</strong> (non-degenerate) during optimization.</blockquote>
 
             <h3 id="sh-color">3.2 View-Dependent Color (Spherical Harmonics)</h3>
             <p>3DGS doesn't just store a single RGB value. Instead, it uses <strong>Spherical Harmonics (SH)</strong> so that a Gaussian can look different from different angles—reproducing highlights and reflections.</p>
@@ -165,22 +167,22 @@
             <div id="projection-demo" class="demo-viewport">
                 <!-- Projection visualization here -->
             </div>
-
+            
             <h3>B. Fast Tile-Based Rasterization</h3>
-            <p>This is where the real-time magic happens:</p>
-            <ul>
-                <li><strong>Instancing and Culling</strong>: Divide the screen into 16 × 16 tiles.</li>
-                <li><strong>Alpha Blending (The Radiance Field Equation)</strong>:
-                    <p>Finally, we compute the color of each pixel by blending all Gaussians that overlap it in back-to-front order. This is the "glue" that combines billions of particles into a single continuous image:</p>
-                    <div class="math-block" id="math-alpha"></div>
-                    
-                    <p style="font-size: 0.95rem; background: var(--nord2); padding: 1.5rem; border-radius: 8px;">
-                        <strong>Understanding Transmittance</strong>: The term <code>Π(1 - α)</code> is called <em>Transmittance</em>. It represents the probability that light from a Gaussian can pass through all the Gaussians <em>in front of it</em> to reach the camera. 
-                        <br><br>
-                        If the Gaussians in front are very opaque (high Alpha), the transmittance drops to zero, and the background Gaussians become invisible.
-                    </p>
-                </li>
-            </ul>
+            <p>This is the magic that enables real-time performance. Unlike traditional ray-tracing, 3DGS uses a high-speed GPU pipeline:</p>
+            <ol style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                <li><strong>Instancing & Culling</strong>: The screen is divided into 16x16 <strong>Tiles</strong>. Each Gaussian identifies which tiles it touches and creates an "instance" for each, allowing parallel processing.</li>
+                <li><strong>Radix Sort</strong>: Within each tile, the relevant Gaussians are **sorted by depth**. This precise ordering is the prerequisite for correct alpha blending.</li>
+                <li><strong>Parallel Alpha Blending</strong>: For every pixel in the tile, we traverse the sorted list and compute the final color using the <strong>Volume Rendering Equation</strong>:</li>
+            </ol>
+            
+            <div style="background: var(--nord2); padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0;">
+                <h4 style="margin-top: 0; color: var(--accent-blue);">The Physics of Blending</h4>
+                <div class="math-block" id="math-alpha"></div>
+                <p style="font-size: 0.95rem; margin-top: 1rem;">
+                    <strong>Transmittance (Ti)</strong>: This term represents the probability that light can pass through all preceding Gaussians to reach the camera. If a Gaussian in front is fully opaque, <code>Ti</code> drops to zero, making objects behind it invisible.
+                </p>
+            </div>
 
             <!-- Added Sorting Demo -->
             <div id="sorting-demo" class="demo-viewport">
