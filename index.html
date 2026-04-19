@@ -19,8 +19,21 @@
     <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
+    <button id="sidebar-toggle" class="toggle-btn toggle-btn-open">☰ Menu</button>
+    
+    <aside id="sidebar" class="sidebar">
+        <h3 style="margin-top: 0;">Table of Contents</h3>
+        <nav>
+            <ul>
+                <li><a href="#introduction">1. Introduction</a></li>
+                <li><a href="#mathematics">2. Mathematical Foundation</a></li>
+                <li><a href="#algorithm">3. The Core Algorithm</a></li>
+            </ul>
+        </nav>
+    </aside>
 
-    <div class="container">
+    <div class="layout-wrapper" id="layout-wrapper">
+        <div class="container">
         <header>
             <h1>3D Gaussian Splatting</h1>
             <p>From Discrete Points to Continuous Volumes</p>
@@ -100,6 +113,7 @@
             </div>
         </section>
     </div>
+    </div> <!-- End layout wrapper -->
 
     <script type="module" src="./src/main.js"></script>
 </body>

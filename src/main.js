@@ -26,4 +26,38 @@ document.addEventListener('DOMContentLoaded', () => {
     initGaussianKernelDemo('kernel-demo');
     initProjectionDemo('projection-demo');
     initSortingDemo('sorting-demo');
+
+    // Sidebar Toggle Logic
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const layoutWrapper = document.getElementById('layout-wrapper');
+
+    toggleBtn?.addEventListener('click', () => {
+        sidebar.classList.toggle('visible');
+        layoutWrapper.classList.toggle('sidebar-open');
+        toggleBtn.classList.toggle('moved');
+        
+        // Change button text contextually
+        if (sidebar.classList.contains('visible')) {
+            toggleBtn.innerHTML = '✕ Close';
+            toggleBtn.style.color = 'var(--nord11)';
+        } else {
+            toggleBtn.innerHTML = '☰ Menu';
+            toggleBtn.style.color = 'var(--nord6)';
+        }
+    });
+
+    // Close sidebar when a navigation link is clicked (mobile friendly)
+    const navLinks = document.querySelectorAll('.sidebar nav a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('visible');
+                layoutWrapper.classList.remove('sidebar-open');
+                toggleBtn.classList.remove('moved');
+                toggleBtn.innerHTML = '☰ Menu';
+                toggleBtn.style.color = 'var(--nord6)';
+            }
+        });
+    });
 });
