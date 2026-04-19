@@ -91,6 +91,30 @@
             
             <h3>機率密度函數 (PDF)</h3>
             <div class="math-block" id="math-pdf"></div>
+
+            <div style="margin: 2rem 0;">
+                <h4 style="color: var(--nord8);">為什麼將「噴濺」定義為一個 PDF？</h4>
+                <p>透過將每個噴濺定義為一個機率密度函數 (PDF)，我們能從離散的點雲轉向<strong>連續且可微 (Continuous and Differentiable)</strong> 的體積。這是 3DGS 能夠成功的關鍵原因：</p>
+                
+                <ol style="display: flex; flex-direction: column; gap: 1.5rem; padding-left: 1.2rem;">
+                    <li>
+                        <strong>數學定義：多元常態分佈</strong>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">每個高斯核本質上是一個 3D 常態分佈（高斯分佈）。其數值 <code>f(x)</code> 描述了空間中某一點 <code>x</code> 屬於該噴濺的「機率權重」。
+                        <br>— <strong>μ (均值)</strong>：代表高斯球的球心位置。
+                        <br>— <strong>Σ (協方差矩陣)</strong>：決定了球體的長短、扁平度與旋轉方向。</p>
+                    </li>
+                    <li>
+                        <strong>從「硬邊界」到「軟貢獻」</strong>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">與傳統的網格或具有明顯邊界的點雲不同，PDF 提供了<strong>空間連續性</strong>。空間中的任何一點都會受到高斯球的影響，只是權重隨著距離呈指數級衰減。
+                        <br><br>最重要的是，它是<strong>可微 (Differentiable)</strong> 的。因為 PDF 是連續且平滑的，我們可以使用梯度下降法來最佳化位置與形狀。我們可以精確計算出：如果球體移動一點點，對最終影像會造成什麼樣的微小變化。</p>
+                    </li>
+                    <li>
+                        <strong>渲染物理意義：學習到的不透明度 (α)</strong>
+                        <p style="font-size: 0.95rem; margin-top: 0.5rem;">在渲染過程中，這個 PDF 代表了空間佔用率。我們將這個空間貢獻乘以一個不透明度係數 <code>α</code>：</p>
+                        <div class="math-block" id="math-influence"></div>
+                    </li>
+                </ol>
+            </div>
             
             <h3>解析共變異數 (Σ)</h3>
             <p>儲存完整的共變異數矩陣很難進行最佳化。相反地，我們將其拆解為 <strong>縮放 (S)</strong> 與 <strong>旋轉 (R，透過四元數)</strong>：</p>
@@ -254,6 +278,8 @@
                     </tbody>
                 </table>
             </div>
+        </section>
+
         <section id="mesh-extraction">
             <h2>7. 從噴濺到網格 (Marching Cubes)</h2>
             <p>3D 高斯球是體積態的擬合——這對照片級渲染非常完美，但對傳統的物理引擎或 3D 軟體來說卻難以處理。為了得到標準的三角形網格，我們通常使用 <strong>SDF-to-SURFACE</strong> 的處理流程。</p>
