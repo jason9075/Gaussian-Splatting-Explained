@@ -24,16 +24,17 @@
             <h3 style="margin-top: 0;">Table of Contents</h3>
             <nav>
                 <ul>
-                <li><a href="#introduction">1. Introduction</a></li>
-                <li><a href="#colmap-sfm">2. Initialization with COLMAP (SfM)</a></li>
-                <li><a href="#mathematics">3. Mathematical Foundation</a>
+                <li><a href="#introduction">1. Introduction (The Hook)</a></li>
+                <li><a href="#colmap-sfm">2. Initialization (The Seeds / SfM)</a></li>
+                <li><a href="#mathematics">3. The Anatomy of a Gaussian</a>
                     <ul style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 0.9rem;">
-                        <li><a href="#mathematics">3.1 PDF & Covariance</a></li>
-                        <li><a href="#sh-color">3.2 Spherical Harmonics</a></li>
+                        <li><a href="#mathematics">3.1 Geometry (Sigma)</a></li>
+                        <li><a href="#sh-color">3.2 Appearance (SH)</a></li>
                     </ul>
                 </li>
-                <li><a href="#algorithm">4. The Core Algorithm</a></li>
-                <li><a href="#optimization">5. The Optimization Loop</a></li>
+                <li><a href="#algorithm">4. The Forward Pass (Rendering)</a></li>
+                <li><a href="#optimization">5. The Backward Pass (Optimization)</a></li>
+                <li><a href="#comparison">6. Comparison (3DGS vs NeRF)</a></li>
                 </ul>
             </nav>
         </div>
@@ -49,7 +50,7 @@
         </header>
 
         <section id="introduction">
-            <h2>1. Introduction</h2>
+            <h2>1. Introduction (The Hook)</h2>
             <p>Why move away from Point Clouds or NeRFs?</p>
             <ul>
                 <li><strong>The Problem</strong>: Point clouds are discrete and sparse; NeRFs are continuous but computationally expensive to query.</li>
@@ -59,13 +60,19 @@
         </section>
 
         <section id="colmap-sfm">
-            <h2>2. Initialization with COLMAP (SfM)</h2>
+            <h2>2. Initialization (The Seeds / SfM)</h2>
             <p>Before optimizing any 3D Gaussians, we need an initial guess of where the object is in space.</p>
             <ul>
                 <li><strong>Multiple Perspectives</strong>: We capture images of the object from various angles around it.</li>
                 <li><strong>Structure-from-Motion (SfM)</strong>: Software like COLMAP analyzes visual features across these images to triangulate points in 3D space.</li>
-                <li><strong>Sparse Point Cloud</strong>: The result is a cloud of floating points. These points serve as the initial centers (positions) for our Gaussian splats!</li>
+                <li><strong>Sparse Point Cloud</strong>: The result is a cloud of floating points. These points serve as the initial centers for our Gaussian splats.</li>
             </ul>
+
+            <div style="background: var(--nord2); padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+                <h4 style="margin-top: 0; color: var(--nord8);">Why are SfM Point Clouds "Sparse"?</h4>
+                <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">COLMAP only triangulates points where it finds highly confident feature matches (like sharp edges or textures). It leaves smooth walls, skies, or low-texture areas completely blank, resulting in a cloud missing vast amounts of surface data.</p>
+                <p style="margin-bottom: 0; font-size: 0.95rem;"><strong>The 3DGS Advantage ("Splatting"):</strong> This is why we don't just stop at point clouds. 3DGS uses these sparse points as "seeds" and physically expands (splats) them into overlapping, fuzzy volumetric ellipsoids. Through optimization, it <em>grows</em> them into a dense, gapless, and continuous scene.</p>
+            </div>
             
             <div id="colmap-demo" class="demo-viewport">
                 <!-- Colmap SfM visualization here -->
@@ -73,7 +80,7 @@
         </section>
 
         <section id="mathematics">
-            <h2>3. Mathematical Foundation</h2>
+            <h2>3. The Anatomy of a Gaussian (Geometry & Appearance)</h2>
             <p>Define the primitive that makes everything work: the 3D Gaussian Kernel.</p>
             
             <h3>The Probability Density Function (PDF)</h3>
@@ -115,7 +122,7 @@
         </section>
 
         <section id="algorithm">
-            <h2>4. The Core Algorithm</h2>
+            <h2>4. The Forward Pass (Projection & Tile-based Rasterization)</h2>
             
             <h3>A. Projection (3D to 2D Splatting)</h3>
             <p>How a 3D ellipsoid becomes a 2D "splat" on the screen.</p>
@@ -154,7 +161,7 @@
         </section>
 
         <section id="optimization">
-            <h2>5. The Optimization Loop (The "Learning" Phase)</h2>
+            <h2>5. The Backward Pass (Optimization & Densification)</h2>
             <p>We've discussed initialization and rendering, but what makes the Gaussians actually fit the photos? That's the training loop using <strong>Stochastic Gradient Descent (SGD)</strong>.</p>
             
             <h3>A. The Loss Function</h3>
@@ -199,6 +206,50 @@
             
             <h3>C. Pruning</h3>
             <p>Periodically, the algorithm cleans up the scene by removing Gaussians that are basically transparent (Opacity α drops near zero) or those that have become unreasonably large and are "leaking" into empty space. This keeps the rendering fast and the file size manageable.</p>
+        </section>
+
+        <section id="comparison">
+            <h2>6. Comparison (3DGS vs. NeRF vs. Mesh)</h2>
+            <p>To summarize why 3D Gaussian Splatting is a breakthrough, let's look at how it compares to its predecessors:</p>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--nord1); border-radius: 8px; overflow: hidden;">
+                    <thead>
+                        <tr style="background: var(--nord3); color: var(--nord6); text-align: left;">
+                            <th style="padding: 1rem;">Feature</th>
+                            <th style="padding: 1rem;">Traditional Meshes</th>
+                            <th style="padding: 1rem;">NeRF (Neural Radiance Fields)</th>
+                            <th style="padding: 1rem;">3D Gaussian Splatting</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--nord2);">
+                            <td style="padding: 1rem; font-weight: bold;">Representation</td>
+                            <td style="padding: 1rem;">Discrete Polygons (Triangles)</td>
+                            <td style="padding: 1rem;">Continuous Neural Network Weights</td>
+                            <td style="padding: 1rem;">Explicit Point-based Volumetric Primitives</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--nord2);">
+                            <td style="padding: 1rem; font-weight: bold;">Rendering Speed</td>
+                            <td style="padding: 1rem; color: var(--nord14);">Extremely Fast (Hardware Accelerated)</td>
+                            <td style="padding: 1rem; color: var(--nord11);">Very Slow (Requires Ray-marching MLPs)</td>
+                            <td style="padding: 1rem; color: var(--nord14);">Extremely Fast (Tile-based Rasterization)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--nord2);">
+                            <td style="padding: 1rem; font-weight: bold;">Visual Quality</td>
+                            <td style="padding: 1rem; color: var(--nord13);">Struggles with fuzzy/translucent materials</td>
+                            <td style="padding: 1rem; color: var(--nord14);">Photorealistic, great for complex lighting</td>
+                            <td style="padding: 1rem; color: var(--nord14);">Photorealistic, captures reflections via SH</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1rem; font-weight: bold;">Editability</td>
+                            <td style="padding: 1rem; color: var(--nord14);">Easy (Vertices can be directly moved)</td>
+                            <td style="padding: 1rem; color: var(--nord11);">Extremely Hard (Black box neural network)</td>
+                            <td style="padding: 1rem; color: var(--nord14);">Easy (Gaussians are explicit points in space)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
     </div> <!-- End layout wrapper -->
